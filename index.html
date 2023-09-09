@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Editor</title>
+    <style>
+        #avatar {
+            max-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Avatar Editor</h1>
+    <div>
+        <label for="color">Enter RGB Color (e.g., 255, 0, 0 for red):</label>
+        <input type="text" id="color" placeholder="e.g., 255, 0, 0">
+        <button id="editColor">Edit </button>
+    </div>
+    <div>
+        <label for="color">Enter Face Type (1(default) or 2(smiley)):</label>
+        <input type="text" id="face" placeholder="e.g., 255, 0, 0">
+        <button id="editColor">Edit Face</button>
+    </div>
+    <div>
+        <h2>Edited Avatar:</h2>
+        <img id="avatar" src="" alt="Edited Avatar">
+    </div>
+    <script>
+        document.getElementById("editColor").addEventListener("click", async () => {
+            document.getElementById("avatar").src = "https://www.icegif.com/wp-content/uploads/loading-icegif.gif";
+            const colorInput = document.getElementById("color");
+            const colorValue = colorInput.value.trim();
+            if (colorValue) {
+                try {
+                    const response = await fetch("edit_avatar", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            color: colorValue.split(",").map(Number),
+                        }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const avatarImage = document.getElementById("avatar");
+                        avatarImage.src = "data:image/png;base64," + data.image_base64;
+                    } else {
+                        alert("Error: Unable to edit avatar color.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("An error occurred while communicating with the server.");
+                }
+            } else {
+                alert("Please enter an RGB color value.");
+            }
+        });
+
+        document.getElementById("face").addEventListener("change", async (event) => {
+            const faceInput = event.target;
+            const file = faceInput.files[0];
+            if (file) {
+                try {
+                    const formData = new FormData();
+                    formData.append("face", file);
+
+                    const response = await fetch("/upload_face", {
+                        method: "POST",
+                        body: formData,
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const avatarImage = document.getElementById("avatar");
+                        avatarImage.src = "data:image/png;base64," + data.image_base64;
+                    } else {
+                        alert("Error: Unable to upload face.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("An error occurred while communicating with the server.");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
